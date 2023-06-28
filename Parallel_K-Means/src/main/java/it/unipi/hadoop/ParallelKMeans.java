@@ -38,7 +38,7 @@ public class ParallelKMeans
             }
 
             // inizializzazione array di partial info
-            int k = context.getConfiguration().getInt("parallel.kmeans.k",2);
+            // int k = context.getConfiguration().getInt("parallel.kmeans.k",2);
 
         }
 
@@ -78,41 +78,14 @@ public class ParallelKMeans
 
     public static class ParallelKMeansReducer extends Reducer<IntWritable, PartialClusterInfo, IntWritable, CentroidWritable>
     {
-        private int windowSize;
-
-        public void setup(Context context) throws IOException, InterruptedException
-        {
-            this.windowSize = context.getConfiguration().getInt("moving.average.window.size", 5);
-        }
 
         public void reduce(IntWritable key, Iterable<PartialClusterInfo> values, Context context) throws IOException, InterruptedException
         {
-            // build the unsorted list of timeseries
-            List<TimeSeriesData> timeseries = new ArrayList<TimeSeriesData>();
-            for (TimeSeriesData tsData : values) {
-                timeseries.add(TimeSeriesData.copy(tsData));
+            PartialClusterInfo partialClusterInfo = new PartialClusterInfo();
+            for (PartialClusterInfo pi : values) {
+                partialClusterInfo.add_points(pi);
             }
-
-            // sort the timeseries data in memory
-            Collections.sort(timeseries);
-
-            // apply moving average algorithm to sorted timeseries
-            Text outputValue = new Text(); // reuse object
-
-            double sum = 0.0d;
-            for (int i = 0; i < windowSize - 1; i++)
-                sum += timeseries.get(i).getValue();
-
-            for (int i = windowSize - 1; i < timeseries.size(); i++) {
-                sum += timeseries.get(i).getValue();
-
-                double movingAverage = sum / windowSize;
-                long timestamp = timeseries.get(i).getTimestamp();
-                outputValue.set(DateUtil.getDateAsString(timestamp) + ", " + movingAverage);
-                context.write(key, outputValue);
-
-                sum -= timeseries.get(i - windowSize + 1).getValue();
-            }
+            context.write(key,new CentroidWritable(partialClusterInfo));
         }
 
     }
@@ -135,7 +108,7 @@ public class ParallelKMeans
 
         // define mapper's output key-value
         job.setMapOutputKeyClass(Text.class);
-        job.setMapOutputValueClass(TimeSeriesData.class);
+        job.setMapOutputValueClass(CentroidWritable.class);
 
         // define reducer's output key-value
         job.setOutputKeyClass(Text.class);

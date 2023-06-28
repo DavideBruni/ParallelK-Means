@@ -1,32 +1,22 @@
 package it.unipi.hadoop;
 
-import org.apache.hadoop.io.WritableComparable;
-
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CentroidWritable extends Point implements WritableComparable<CentroidWritable> {
+public class CentroidWritable extends Point{
 
     public CentroidWritable(String str) {   //input format "x,y,z"
         super(str);
     }
 
-    @Override
-    public int compareTo(CentroidWritable o) {
-        return 0;
-    }
-
-    @Override
-    public void write(DataOutput dataOutput) throws IOException {
-
-    }
-
-    @Override
-    public void readFields(DataInput dataInput) throws IOException {
-
+    public CentroidWritable(PartialClusterInfo partialClusterInfo) {
+        super();
+        List<Double> values = new ArrayList<>();
+        int num_points = partialClusterInfo.getNum_points();
+        for(Double dir_sum : partialClusterInfo.getPartial_sum()){
+            values.add(dir_sum/num_points);
+        }
+        setValues(values);
     }
 
     @Override
