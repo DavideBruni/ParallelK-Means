@@ -1,6 +1,9 @@
 package it.unipi.utils;
 
 import it.unipi.hadoop.CentroidWritable;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -43,6 +46,23 @@ public class Utils {
         try(BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;
             while ((line = reader.readLine()) != null && centroids.size() < k) {
+                CentroidWritable c = new CentroidWritable(line);
+                centroids.add(c);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return centroids;
+    }
+
+    public static List<CentroidWritable> readCentroids(Configuration config, String inputPath) throws IOException {
+        List<CentroidWritable> centroids = new ArrayList<>();
+        FileSystem fs = FileSystem.get(config);
+        Path filePath = new Path(inputPath);
+        try(BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(filePath)))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
                 CentroidWritable c = new CentroidWritable(line);
                 centroids.add(c);
             }

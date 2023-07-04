@@ -144,8 +144,8 @@ public class ParallelKMeans
 
             // Submit the job and wait for its completion
             boolean success = job.waitForCompletion(true);
-            System.exit(1);
-            /*
+
+
             // Check the job status and exit accordingly
             if (!success) {
                 System.exit(1);
@@ -153,16 +153,14 @@ public class ParallelKMeans
 
             // Check for convergence
 
-            List<CentroidWritable> new_centroids = Utils.readCentroids(outputPath + "/iteration_" + iteration + "/part-r-00000");
-
+            List<CentroidWritable> new_centroids = Utils.readCentroids(conf,outputPath + "/iteration_" + iteration + "/part-r-00000");
             converged = Utils.checkConvergence(centroids, new_centroids,tolerance);
 
-            // converged = checkConvergence(outputPath + "/iteration_" + iteration + "/part-r-00000", outputPath + "/iteration_" + (iteration - 1) + "/part-r-00000");
-
+            centroids = new_centroids;
             iteration++;
-            */
+
         }
-        // System.exit(job.waitForCompletion(true) ? 0 : 1);
+         System.exit(1);
     }
 }
 
