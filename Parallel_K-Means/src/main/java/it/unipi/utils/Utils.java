@@ -2,9 +2,7 @@ package it.unipi.utils;
 
 import it.unipi.hadoop.CentroidWritable;
 
-import java.io.DataInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,19 +20,6 @@ public class Utils {
         }
     }
 
-    public static List<CentroidWritable> randomCentroids(int k, int d){
-
-        List<CentroidWritable> centroids = new ArrayList<>();
-        for(int i = 0; i<k; i++){
-            CentroidWritable c = new CentroidWritable();
-            for(int j=0; j<d; j++){
-                c.addDimension(Math.random());
-            }
-            centroids.add(c);
-        }
-        return centroids;
-    }
-
     public static boolean checkConvergence(List<CentroidWritable> old_centroids, List<CentroidWritable> new_centroids, double tolerance){
         for(CentroidWritable c : new_centroids){
             int index = new_centroids.indexOf(c);
@@ -44,18 +29,28 @@ public class Utils {
         }
         return true;
     }
-    /*
-    public static List<CentroidWritable> readCentroids(String filePath) {
-        DataInputStream dataInputStream = null;
-        CentroidWritable c = new CentroidWritable();
-        try {
-            FileInputStream fileInputStream = new FileInputStream(filePath);
-            dataInputStream = new DataInputStream(fileInputStream);
-            c.readFields(dataInputStream);
 
+
+    /* abbiamo preso i primi k perchè:
+        - farlo randomico, sarebbe stato pesante nel momento in cui il file occupa più di un blocco
+        - computazione più veloce (leggere le prime righe è più veloce di dover generare un numero casuale e poi leggere le righe)
+        - prendere valori randomici al di fuori dal dataset sarebbe stato scorretto in quanto potevano essere generate coordinate
+            fuori distribuzione (outliers)
+      */
+    public static List<CentroidWritable> randomCentroids(int k, String filePath){
+        List<CentroidWritable> centroids = new ArrayList<>();
+
+        try(BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = reader.readLine()) != null && centroids.size() < k) {
+                CentroidWritable c = new CentroidWritable(line);
+                centroids.add(c);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        return centroids;
     }
-    */
+
 }

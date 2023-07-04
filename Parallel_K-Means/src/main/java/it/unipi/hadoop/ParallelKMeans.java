@@ -107,7 +107,7 @@ public class ParallelKMeans
         int max_iter = Integer.parseInt(otherArgs[4]);
         double tolerance = Double.parseDouble(otherArgs[3]);
 
-        List<CentroidWritable> centroids = Utils.randomCentroids(k,d);
+        List<CentroidWritable> centroids = Utils.randomCentroids(k,inputPath);
 
         System.out.println(centroids);
 
