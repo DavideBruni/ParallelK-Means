@@ -109,42 +109,33 @@ public class ParallelKMeans
 
         List<CentroidWritable> centroids = Utils.randomCentroids(k,inputPath);
 
-        System.out.println(centroids);
+        Job job = Job.getInstance(conf, "ParallelKMeans");
+        job.setJarByClass(ParallelKMeans.class);
+
+        // set mapper/reducer
+        job.setMapperClass(ParallelKMeansMapper.class);
+        job.setReducerClass(ParallelKMeansReducer.class);
+
+        // Set the types of the output key and value from the mappers
+        job.setMapOutputKeyClass(IntWritable.class);
+        job.setMapOutputValueClass(PartialClusterInfo.class);
+
+        // define reducer's output key-value
+        job.setOutputKeyClass(IntWritable.class);
+        job.setOutputValueClass(CentroidWritable.class);
+
+        job.setInputFormatClass(TextInputFormat.class);
+        job.setOutputFormatClass(TextOutputFormat.class);
+
+        FileInputFormat.addInputPath(job, new Path(inputPath));
 
         while (!converged && iteration<max_iter) {
-
-            Job job = Job.getInstance(conf, "ParallelKMeans");
-            job.setJarByClass(ParallelKMeans.class);
-
-            // set mapper/reducer
-            job.setMapperClass(ParallelKMeansMapper.class);
-            job.setReducerClass(ParallelKMeansReducer.class);
-
-            // Set the types of the output key and value from the mappers
-            job.setMapOutputKeyClass(IntWritable.class);
-            job.setMapOutputValueClass(PartialClusterInfo.class);
-
-            // define reducer's output key-value
-            job.setOutputKeyClass(IntWritable.class);
-            job.setOutputValueClass(CentroidWritable.class);
-
-            job.setInputFormatClass(TextInputFormat.class);
-            job.setOutputFormatClass(TextOutputFormat.class);
-
             job.getConfiguration().set("parallel.kmeans.centroids", centroids.toString());
 
-            // Set the input and output paths
-            if (iteration == 0) {
-                FileInputFormat.addInputPath(job, new Path(inputPath));
-            } else {
-                FileInputFormat.addInputPath(job, new Path(outputPath + "/iteration_" + (iteration - 1)));
-            }
             FileOutputFormat.setOutputPath(job, new Path(outputPath + "/iteration_" + iteration));
-
 
             // Submit the job and wait for its completion
             boolean success = job.waitForCompletion(true);
-
 
             // Check the job status and exit accordingly
             if (!success) {
@@ -152,7 +143,6 @@ public class ParallelKMeans
             }
 
             // Check for convergence
-
             List<CentroidWritable> new_centroids = Utils.readCentroids(conf,outputPath + "/iteration_" + iteration + "/part-r-00000");
             converged = Utils.checkConvergence(centroids, new_centroids,tolerance);
 

@@ -8,6 +8,8 @@ import org.apache.hadoop.fs.Path;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Utils {
     public static List<Double> sum(List<Double> sum, List<Double> values) {
@@ -63,8 +65,15 @@ public class Utils {
         try(BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(filePath)))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                CentroidWritable c = new CentroidWritable(line);
-                centroids.add(c);
+                String patternString = "\\[(.*?)\\]";
+                Pattern pattern = Pattern.compile(patternString);
+                Matcher matcher = pattern.matcher(line);
+
+                if (matcher.find()) {
+                    CentroidWritable c = new CentroidWritable(matcher.group(1));
+                    centroids.add(c);
+                }else
+                    return centroids;
             }
         } catch (IOException e) {
             e.printStackTrace();
