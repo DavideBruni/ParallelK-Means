@@ -2,10 +2,7 @@ package it.unipi.utils;
 
 import it.unipi.hadoop.CentroidWritable;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.fs.*;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -91,6 +88,36 @@ public class Utils {
         }
 
         return centroids;
+    }
+
+
+
+    public static void saveInfo(int k, int iter, double tolerance, int numReducers, String inputPath, List<CentroidWritable> centroids, long startTime, long endTime, String outputPath) {
+        Configuration conf = new Configuration();
+        try {
+            FileSystem fs = FileSystem.get(conf);
+
+            StringBuilder infoBuilder = new StringBuilder();
+            infoBuilder.append("k: ").append(k).append("\n");
+            infoBuilder.append("iter: ").append(iter).append("\n");
+            infoBuilder.append("tolerance: ").append(tolerance).append("\n");
+            infoBuilder.append("numReducers: ").append(numReducers).append("\n");
+            infoBuilder.append("inputPath: ").append(inputPath).append("\n");
+            infoBuilder.append("centroids: ").append(centroids).append("\n");
+            infoBuilder.append("startTime: ").append(startTime).append("\n");
+            infoBuilder.append("endTime: ").append(endTime).append("\n");
+            infoBuilder.append("executionTime: ").append(endTime-startTime).append("\n");
+
+            Path filePath = new Path(outputPath+ "/results.txt");
+            FSDataOutputStream outputStream = fs.create(filePath);
+
+            outputStream.writeBytes(infoBuilder.toString());
+
+            outputStream.close();
+            fs.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }

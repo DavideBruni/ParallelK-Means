@@ -107,8 +107,9 @@ public class ParallelKMeans
         double tolerance = Double.parseDouble(otherArgs[1]);
         int numReducers = Integer.parseInt(otherArgs[3]);
 
-        List<CentroidWritable> centroids = Utils.randomCentroids(k,inputPath);
+        long startTime = System.currentTimeMillis();
 
+        List<CentroidWritable> centroids = Utils.randomCentroids(k,inputPath);
         while (!converged && iteration<max_iter) {
             Job job = Job.getInstance(conf, "ParallelKMeans");
             job.setJarByClass(ParallelKMeans.class);
@@ -149,7 +150,9 @@ public class ParallelKMeans
             centroids = new_centroids;
             iteration++;
         }
-         System.exit(0);
+        long endTime = System.currentTimeMillis();
+        Utils.saveInfo(k,iteration,tolerance,numReducers,inputPath,centroids,startTime,endTime,outputPath);
+        System.exit(0);
     }
 }
 
