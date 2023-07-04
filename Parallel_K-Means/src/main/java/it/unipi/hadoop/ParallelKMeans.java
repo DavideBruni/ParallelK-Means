@@ -92,44 +92,44 @@ public class ParallelKMeans
     {
         Configuration conf = new Configuration();
         String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
-        if (otherArgs.length != 7) {
-            System.err.println("Usage: MovingAverage <k number of clusters> <d dimension> <n number of elements> <tolerance> <max_iter> <input> <output>");
+        if (otherArgs.length != 6) {
+            System.err.println("Usage: Parallel KMeans <k number of clusters> <tolerance> <max_iter> <r reducer number> <input> <output>");
             System.exit(1);
         }
         int iteration = 0;
         boolean converged = false;
 
-        String inputPath = args[5];
-        String outputPath = args[6];
+        String inputPath = args[4];
+        String outputPath = args[5];
 
         int k = Integer.parseInt(otherArgs[0]);
-        int d = Integer.parseInt(otherArgs[1]);
-        int max_iter = Integer.parseInt(otherArgs[4]);
-        double tolerance = Double.parseDouble(otherArgs[3]);
+        int max_iter = Integer.parseInt(otherArgs[2]);
+        double tolerance = Double.parseDouble(otherArgs[1]);
+        int numReducers = Integer.parseInt(otherArgs[3]);
 
         List<CentroidWritable> centroids = Utils.randomCentroids(k,inputPath);
 
-        Job job = Job.getInstance(conf, "ParallelKMeans");
-        job.setJarByClass(ParallelKMeans.class);
-
-        // set mapper/reducer
-        job.setMapperClass(ParallelKMeansMapper.class);
-        job.setReducerClass(ParallelKMeansReducer.class);
-
-        // Set the types of the output key and value from the mappers
-        job.setMapOutputKeyClass(IntWritable.class);
-        job.setMapOutputValueClass(PartialClusterInfo.class);
-
-        // define reducer's output key-value
-        job.setOutputKeyClass(IntWritable.class);
-        job.setOutputValueClass(CentroidWritable.class);
-
-        job.setInputFormatClass(TextInputFormat.class);
-        job.setOutputFormatClass(TextOutputFormat.class);
-
-        FileInputFormat.addInputPath(job, new Path(inputPath));
-
         while (!converged && iteration<max_iter) {
+            Job job = Job.getInstance(conf, "ParallelKMeans");
+            job.setJarByClass(ParallelKMeans.class);
+            job.setNumReduceTasks(numReducers);
+
+            // set mapper/reducer
+            job.setMapperClass(ParallelKMeansMapper.class);
+            job.setReducerClass(ParallelKMeansReducer.class);
+
+            // Set the types of the output key and value from the mappers
+            job.setMapOutputKeyClass(IntWritable.class);
+            job.setMapOutputValueClass(PartialClusterInfo.class);
+
+            // define reducer's output key-value
+            job.setOutputKeyClass(IntWritable.class);
+            job.setOutputValueClass(CentroidWritable.class);
+
+            job.setInputFormatClass(TextInputFormat.class);
+            job.setOutputFormatClass(TextOutputFormat.class);
+
+            FileInputFormat.addInputPath(job, new Path(inputPath));
             job.getConfiguration().set("parallel.kmeans.centroids", centroids.toString());
 
             FileOutputFormat.setOutputPath(job, new Path(outputPath + "/iteration_" + iteration));
@@ -143,14 +143,13 @@ public class ParallelKMeans
             }
 
             // Check for convergence
-            List<CentroidWritable> new_centroids = Utils.readCentroids(conf,outputPath + "/iteration_" + iteration + "/part-r-00000");
+            List<CentroidWritable> new_centroids = Utils.readCentroids(conf,outputPath + "/iteration_" + iteration);
             converged = Utils.checkConvergence(centroids, new_centroids,tolerance);
 
             centroids = new_centroids;
             iteration++;
-
         }
-         System.exit(1);
+         System.exit(0);
     }
 }
 

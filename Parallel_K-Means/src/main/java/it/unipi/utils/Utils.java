@@ -2,8 +2,10 @@ package it.unipi.utils;
 
 import it.unipi.hadoop.CentroidWritable;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathFilter;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -60,23 +62,32 @@ public class Utils {
 
     public static List<CentroidWritable> readCentroids(Configuration config, String inputPath) throws IOException {
         List<CentroidWritable> centroids = new ArrayList<>();
-        FileSystem fs = FileSystem.get(config);
-        Path filePath = new Path(inputPath);
-        try(BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(filePath)))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String patternString = "\\[(.*?)\\]";
-                Pattern pattern = Pattern.compile(patternString);
-                Matcher matcher = pattern.matcher(line);
-
-                if (matcher.find()) {
-                    CentroidWritable c = new CentroidWritable(matcher.group(1));
-                    centroids.add(c);
-                }else
-                    return centroids;
+        Path dirPath = new Path(inputPath);
+        PathFilter filter = new PathFilter() {
+            public boolean accept(Path path) {
+                return path.getName().startsWith("part-r");
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        };
+
+        FileSystem fs = FileSystem.get(config);
+        FileStatus[] fileStatuses = fs.listStatus(dirPath, filter);
+        for (FileStatus status : fileStatuses) {
+            Path filePath = status.getPath();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(filePath)))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String patternString = "\\[(.*?)\\]";
+                    Pattern pattern = Pattern.compile(patternString);
+                    Matcher matcher = pattern.matcher(line);
+
+                    if (matcher.find()) {
+                        CentroidWritable c = new CentroidWritable(matcher.group(1));
+                        centroids.add(c);
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
         return centroids;
