@@ -9,12 +9,14 @@ public class CentroidWritable extends Point{
         super(str);
     }
 
+    public CentroidWritable(){}
+
     public CentroidWritable(PartialClusterInfo partialClusterInfo) {
         super();
         List<Double> values = new ArrayList<>();
         int num_points = partialClusterInfo.getNum_points();
-        for(Double dir_sum : partialClusterInfo.getPartial_sum()){
-            values.add(dir_sum/num_points);
+        for(Double dim_sum : partialClusterInfo.getPartial_sum()){
+            values.add(dim_sum/num_points);
         }
         setValues(values);
     }

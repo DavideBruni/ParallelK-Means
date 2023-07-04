@@ -3,6 +3,7 @@ package it.unipi.hadoop;
 import java.io.IOException;
 import java.util.*;
 
+import it.unipi.utils.Utils;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.conf.Configuration;
@@ -36,9 +37,6 @@ public class ParallelKMeans
                 s = s.substring(1);         //tolgo la prima quadra
                 centroids.add(new CentroidWritable(s));
             }
-
-            // inizializzazione array di partial info
-            // int k = context.getConfiguration().getInt("parallel.kmeans.k",2);
 
         }
 
@@ -95,37 +93,72 @@ public class ParallelKMeans
         Configuration conf = new Configuration();
         String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
         if (otherArgs.length != 7) {
-            System.err.println("Usage: MovingAverage <k number of clusters> <n number of elements> <d dimension> <tolerance> <max_iter> <input> <output>");
+            System.err.println("Usage: MovingAverage <k number of clusters> <d dimension> <n number of elements> <tolerance> <max_iter> <input> <output>");
             System.exit(1);
         }
-        
-        Job job = Job.getInstance(conf, "ParallelKMeans");
-        job.setJarByClass(ParallelKMeans.class);
+        int iteration = 0;
+        boolean converged = false;
 
-        // set mapper/reducer
-        job.setMapperClass(ParallelKMeansMapper.class);
-        job.setReducerClass(ParallelKMeansReducer.class);
+        String inputPath = args[5];
+        String outputPath = args[6];
 
-        // define mapper's output key-value
-        job.setMapOutputKeyClass(Text.class);
-        job.setMapOutputValueClass(CentroidWritable.class);
+        int k = Integer.parseInt(otherArgs[0]);
+        int d = Integer.parseInt(otherArgs[1]);
+        int max_iter = Integer.parseInt(otherArgs[4]);
+        double tolerance = Double.parseDouble(otherArgs[3]);
 
-        // define reducer's output key-value
-        job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(Text.class);
+        List<CentroidWritable> centroids = Utils.randomCentroids(k,d);
 
-        // set window size for moving average calculation
-        int windowSize = Integer.parseInt(otherArgs[0]);
-        job.getConfiguration().setInt("moving.average.window.size", windowSize);
 
-        // define I/O
-        FileInputFormat.addInputPath(job, new Path(otherArgs[1]));
-        FileOutputFormat.setOutputPath(job, new Path(otherArgs[2]));
+        while (!converged && iteration<max_iter) {
 
-        job.setInputFormatClass(TextInputFormat.class);
-        job.setOutputFormatClass(TextOutputFormat.class);
+            Job job = Job.getInstance(conf, "ParallelKMeans");
+            job.setJarByClass(ParallelKMeans.class);
 
-        System.exit(job.waitForCompletion(true) ? 0 : 1);
+            // set mapper/reducer
+            job.setMapperClass(ParallelKMeansMapper.class);
+            job.setReducerClass(ParallelKMeansReducer.class);
+
+
+            // define reducer's output key-value
+            job.setOutputKeyClass(IntWritable.class);
+            job.setOutputValueClass(CentroidWritable.class);
+
+            job.setInputFormatClass(TextInputFormat.class);
+            job.setOutputFormatClass(TextOutputFormat.class);
+
+            job.getConfiguration().set("parallel.kmeans.centroids", centroids.toString());
+
+            // Set the input and output paths
+            if (iteration == 0) {
+                FileInputFormat.addInputPath(job, new Path(inputPath));
+            } else {
+                FileInputFormat.addInputPath(job, new Path(outputPath + "/iteration_" + (iteration - 1)));
+            }
+            FileOutputFormat.setOutputPath(job, new Path(outputPath + "/iteration_" + iteration));
+
+
+            // Submit the job and wait for its completion
+            boolean success = job.waitForCompletion(true);
+            System.exit(1);
+            /*
+            // Check the job status and exit accordingly
+            if (!success) {
+                System.exit(1);
+            }
+
+            // Check for convergence
+
+            List<CentroidWritable> new_centroids = Utils.readCentroids(outputPath + "/iteration_" + iteration + "/part-r-00000");
+
+            converged = Utils.checkConvergence(centroids, new_centroids,tolerance);
+
+            // converged = checkConvergence(outputPath + "/iteration_" + iteration + "/part-r-00000", outputPath + "/iteration_" + (iteration - 1) + "/part-r-00000");
+
+            iteration++;
+            */
+        }
+        // System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 }
 
