@@ -31,7 +31,7 @@ public class ParallelKMeans
             // inizializzazione array di centroidi
             String centroids_str = context.getConfiguration().get("parallel.kmeans.centroids",null);
             centroids_str = centroids_str.substring(1, centroids_str.length() - 2);     //rimuovo la prima e l'ultima quadra
-            String[] single_centroid_str = centroids_str.split("],");           // ogni centroide è rappresentato da un array
+            String[] single_centroid_str = centroids_str.split("], ");           // ogni centroide è rappresentato da un array
 
             for (String s:single_centroid_str) {
                 s = s.substring(1);         //tolgo la prima quadra
@@ -109,6 +109,7 @@ public class ParallelKMeans
 
         List<CentroidWritable> centroids = Utils.randomCentroids(k,d);
 
+        System.out.println(centroids);
 
         while (!converged && iteration<max_iter) {
 
@@ -119,6 +120,9 @@ public class ParallelKMeans
             job.setMapperClass(ParallelKMeansMapper.class);
             job.setReducerClass(ParallelKMeansReducer.class);
 
+            // Set the types of the output key and value from the mappers
+            job.setMapOutputKeyClass(IntWritable.class);
+            job.setMapOutputValueClass(PartialClusterInfo.class);
 
             // define reducer's output key-value
             job.setOutputKeyClass(IntWritable.class);
