@@ -1,0 +1,16 @@
+- Introduzione:
+	- spiegare velocemente kmeans
+	- spiegare i vari passaggi dal primo map-reduce all'in mapper combining
+- Spiegare il codice:
+	- schema principale
+	- main (ParallelKmeans.java)
+		- input
+		- criterio di arresto
+		- inizializzazione centroidi
+		- Mapper (con setup e cleanup)
+		- Reducer
+	- Altre classi
+- Results:
+	- Mostrare i dataset utilizzati
+	- Discussione sui risultati (tabella e vari grafici) --> ricordarsi di dire che con 1Milione in mapper combining crusha --> 
+		testare con combiner e mostrare i risultati --> mostrare la differnza anche con Scikit learn e con una implementazione "manuale"	
