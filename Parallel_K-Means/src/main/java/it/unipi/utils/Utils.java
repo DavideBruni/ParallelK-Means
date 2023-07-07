@@ -7,6 +7,7 @@ import org.apache.hadoop.fs.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -58,7 +59,8 @@ public class Utils {
     }
 
     public static List<CentroidWritable> readCentroids(Configuration config, String inputPath) throws IOException {
-        List<CentroidWritable> centroids = new ArrayList<>();
+        TreeMap<Integer, CentroidWritable> centroids = new TreeMap<>();
+
         Path dirPath = new Path(inputPath);
         PathFilter filter = new PathFilter() {
             public boolean accept(Path path) {
@@ -73,21 +75,26 @@ public class Utils {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(filePath)))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
+
                     String patternString = "\\[(.*?)\\]";
                     Pattern pattern = Pattern.compile(patternString);
                     Matcher matcher = pattern.matcher(line);
-
                     if (matcher.find()) {
                         CentroidWritable c = new CentroidWritable(matcher.group(1));
-                        centroids.add(c);
+                        String[] parts = line.split("\\s+", 2);
+                        if (parts.length == 2) {
+                            int clusterIndex = Integer.parseInt(parts[0]);
+                            centroids.put(clusterIndex, c);
+                        }
                     }
+
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
-        return centroids;
+        return new ArrayList<>(centroids.values());
     }
 
 
@@ -114,6 +121,17 @@ public class Utils {
             outputStream.writeBytes(infoBuilder.toString());
 
             outputStream.close();
+
+            Path file_csv_path = new Path("results.csv");
+            FSDataOutputStream outputStream_csv;
+            if(!fs.exists(file_csv_path)){
+                outputStream_csv = fs.create(file_csv_path);
+                outputStream_csv.writeBytes("k,iter,tolerance,numReducers,inputPath,executionTime\n"+k+','+iter+','+tolerance+','+numReducers+','+inputPath+','+(endTime-startTime)/1000+'\n');
+            }else{
+                outputStream_csv = fs.append(file_csv_path);
+                outputStream_csv.writeBytes(""+k+','+iter+','+tolerance+','+numReducers+','+inputPath+','+(endTime-startTime)/1000+'\n');
+            }
+            outputStream_csv.close();
             fs.close();
         } catch (IOException e) {
             e.printStackTrace();
