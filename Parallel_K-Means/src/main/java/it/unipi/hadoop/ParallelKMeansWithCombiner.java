@@ -20,7 +20,7 @@ import org.apache.hadoop.util.GenericOptionsParser;
 
 public class ParallelKMeansWithCombiner
 {
-    public static class ParallelKMeansWithCombinerMapper extends Mapper<LongWritable, Text, IntWritable, Point>
+    public static class ParallelKMeansWithCombinerMapper extends Mapper<LongWritable, Text, IntWritable, PartialClusterInfo>
     {
 
         private List<CentroidWritable> centroids = new ArrayList();
@@ -54,7 +54,11 @@ public class ParallelKMeansWithCombiner
             double min_distance = Collections.min(distances);
             int cluster_index = distances.indexOf(min_distance);
 
-            context.write(new IntWritable(cluster_index),point);
+            // reducer e combiner richiedono lo stesso input, per questo viene mascherato da PartialClusterInfo un oggetto di tipo Point
+            PartialClusterInfo out = new PartialClusterInfo();
+            out.add_point(point);
+
+            context.write(new IntWritable(cluster_index),out);
 
         }
     }
@@ -73,14 +77,14 @@ public class ParallelKMeansWithCombiner
 
     }
 
-    public static class ParallelKMeansWithCombinerCombiner extends Reducer<IntWritable, Point, IntWritable, PartialClusterInfo>
+    public static class ParallelKMeansWithCombinerCombiner extends Reducer<IntWritable, PartialClusterInfo, IntWritable, PartialClusterInfo>
     {
 
-        public void reduce(IntWritable key, Iterable<Point> values, Context context) throws IOException, InterruptedException
+        public void reduce(IntWritable key, Iterable<PartialClusterInfo> values, Context context) throws IOException, InterruptedException
         {
             PartialClusterInfo partialClusterInfo = new PartialClusterInfo();
-            for (Point p : values) {
-                partialClusterInfo.add_point(p);
+            for (PartialClusterInfo p : values) {
+                partialClusterInfo.add_points(p);
             }
             context.write(key,partialClusterInfo);
         }
