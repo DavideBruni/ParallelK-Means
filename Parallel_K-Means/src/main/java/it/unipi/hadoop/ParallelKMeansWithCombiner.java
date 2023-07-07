@@ -125,7 +125,7 @@ public class ParallelKMeansWithCombiner
 
             // Set the types of the output key and value from the mappers
             job.setMapOutputKeyClass(IntWritable.class);
-            job.setMapOutputValueClass(Point.class);
+            job.setMapOutputValueClass(PartialClusterInfo.class);
 
             // define reducer's output key-value
             job.setOutputKeyClass(IntWritable.class);
