@@ -121,8 +121,8 @@ public class Utils {
             outputStream.writeBytes(infoBuilder.toString());
 
             outputStream.close();
-
-            Path file_csv_path = new Path("results.csv");
+            // results.csv nel caso non sia combiner
+            Path file_csv_path = new Path("results_combiner.csv");
             FSDataOutputStream outputStream_csv;
             if(!fs.exists(file_csv_path)){
                 outputStream_csv = fs.create(file_csv_path);
