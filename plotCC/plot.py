@@ -32,9 +32,8 @@ def get_x_compl_plot(x, name_col):
     color_map = {value: plt.get_cmap('Set1')(i) for i, value in enumerate(tolerance_values)}
 
     df_sorted = x.sort_values(['complexity'])
-
-    # Assegna numeri unici a ciascun gruppo con la stessa 'complexity' e 'tolerance'
-    df_sorted['group_num'] = df_sorted.reset_index(drop=True).index
+    df_sorted['group_num'] = df_sorted.groupby(['complexity', 'tolerance']).ngroup()
+    df_sorted = df_sorted.sort_values(['group_num'])
 
     print(df_sorted)
 
