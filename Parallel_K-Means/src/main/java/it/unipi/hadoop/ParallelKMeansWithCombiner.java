@@ -24,7 +24,6 @@ public class ParallelKMeansWithCombiner
     {
 
         private List<CentroidWritable> centroids = new ArrayList();
-        private Map<Integer,List<Point>> points_to_cluster = new HashMap<>();
 
         public void setup(Mapper.Context context) throws IOException, InterruptedException
         {
@@ -59,13 +58,12 @@ public class ParallelKMeansWithCombiner
             out.add_point(point);
 
             context.write(new IntWritable(cluster_index),out);
-
         }
+
     }
 
     public static class ParallelKMeansWithCombinerReducer extends Reducer<IntWritable, PartialClusterInfo, IntWritable, CentroidWritable>
     {
-
         public void reduce(IntWritable key, Iterable<PartialClusterInfo> values, Context context) throws IOException, InterruptedException
         {
             PartialClusterInfo partialClusterInfo = new PartialClusterInfo();
@@ -155,7 +153,7 @@ public class ParallelKMeansWithCombiner
             iteration++;
         }
         long endTime = System.currentTimeMillis();
-        Utils.saveInfo(k,iteration,tolerance,numReducers,inputPath,centroids,startTime,endTime,outputPath);
+        Utils.saveInfo(k,iteration,tolerance,numReducers,inputPath,centroids,startTime,endTime,outputPath,false);
         System.exit(0);
     }
 }

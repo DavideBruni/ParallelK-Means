@@ -1,6 +1,6 @@
 package it.unipi.hadoop;
 
-import org.apache.hadoop.io.WritableComparable;
+import org.apache.hadoop.io.Writable;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Point implements WritableComparable<Point> {
+public class Point implements Writable{
 
     private List<Double> values = new ArrayList<>();
 
@@ -29,18 +29,6 @@ public class Point implements WritableComparable<Point> {
         this.values = values;
     }
 
-    @Override
-    public int compareTo(Point other) {
-        for(Double v : values){
-            int index = values.indexOf(v);
-            double other_v = other.getValues().get(index);
-            if(v > other_v)
-                return 1;
-            else if( v < other_v)
-                return -1;
-        }
-        return 0;
-    }
 
     @Override
     public void write(DataOutput dataOutput) throws IOException {
@@ -60,9 +48,5 @@ public class Point implements WritableComparable<Point> {
             double value = dataInput.readDouble();
             values.add(value);
         }
-    }
-
-    public void addDimension(double random) {
-        values.add(random);
     }
 }

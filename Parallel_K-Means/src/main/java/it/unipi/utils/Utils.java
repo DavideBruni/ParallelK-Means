@@ -13,25 +13,27 @@ import java.util.regex.Pattern;
 
 public class Utils {
     public static List<Double> sum(List<Double> sum, List<Double> values) {
-        if(sum.isEmpty()){
+        if (sum.isEmpty()) {
             return values;
-        }else{
-            for (Double dim_sum:sum) {
-                int index = sum.indexOf(dim_sum);
-                dim_sum += values.get(index);
-                sum.set(index,dim_sum);
+        } else {
+            List<Double> result = new ArrayList<>(sum.size());
+            for (int i = 0; i < sum.size(); i++) {
+                double dim_sum = sum.get(i);
+                double dim_value = values.get(i);
+                result.add(dim_sum + dim_value);
             }
-            return sum;
+            return result;
         }
     }
 
     public static boolean checkConvergence(List<CentroidWritable> old_centroids, List<CentroidWritable> new_centroids, double tolerance){
-        for(CentroidWritable c : new_centroids){
-            int index = new_centroids.indexOf(c);
-            double distance = c.distance(old_centroids.get(index));
-            if(distance > tolerance)
+        double distance_sum = 0.0d;
+        for(int i =0; i< new_centroids.size(); i++){
+            distance_sum += new_centroids.get(i).distance(old_centroids.get(i));
+            if(distance_sum > tolerance)
                 return false;
         }
+
         return true;
     }
 
@@ -99,7 +101,7 @@ public class Utils {
 
 
 
-    public static void saveInfo(int k, int iter, double tolerance, int numReducers, String inputPath, List<CentroidWritable> centroids, long startTime, long endTime, String outputPath) {
+    public static void saveInfo(int k, int iter, double tolerance, int numReducers, String inputPath, List<CentroidWritable> centroids, long startTime, long endTime, String outputPath, boolean flag) {
         Configuration conf = new Configuration();
         try {
             FileSystem fs = FileSystem.get(conf);
@@ -121,8 +123,12 @@ public class Utils {
             outputStream.writeBytes(infoBuilder.toString());
 
             outputStream.close();
-            // results.csv nel caso non sia combiner
-            Path file_csv_path = new Path("results_combiner.csv");
+            
+            Path file_csv_path;
+            if(flag)
+                file_csv_path = new Path("results.csv");
+            else
+                file_csv_path = new Path("results_combiner.csv");
             FSDataOutputStream outputStream_csv;
             if(!fs.exists(file_csv_path)){
                 outputStream_csv = fs.create(file_csv_path);

@@ -151,7 +151,7 @@ public class ParallelKMeans
             iteration++;
         }
         long endTime = System.currentTimeMillis();
-        Utils.saveInfo(k,iteration,tolerance,numReducers,inputPath,centroids,startTime,endTime,outputPath);
+        Utils.saveInfo(k,iteration,tolerance,numReducers,inputPath,centroids,startTime,endTime,outputPath,true);
         System.exit(0);
     }
 }

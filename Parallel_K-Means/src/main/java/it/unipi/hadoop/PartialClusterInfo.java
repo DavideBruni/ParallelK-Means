@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PartialClusterInfo implements WritableComparable<PartialClusterInfo> {
+public class PartialClusterInfo implements Writable{
 
     private List<Double> partial_sum = new ArrayList<>();
     private int num_points = 0;
@@ -45,13 +45,6 @@ public class PartialClusterInfo implements WritableComparable<PartialClusterInfo
             partial_sum.add(value);
         }
         num_points = dataInput.readInt();       // Read the value of num_points
-    }
-
-    @Override
-    public int compareTo(PartialClusterInfo o) {
-        if (num_points == o.getNum_points())
-                return 0;
-        return num_points > o.num_points ? 1 : -1;
     }
 
     public void add_point(Point point) {
