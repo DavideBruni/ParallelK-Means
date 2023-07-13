@@ -1,0 +1,7 @@
+k,iter,tolerance,numReducers,inputPath,executionTime
+50,100,1.0E-5,1,inputs/input_1000000x2_50.txt,2155
+50,100,1.0E-5,1,inputs/input_10000000x2_50.txt,3780
+10,100,1.0E-5,1,inputs/input_50000000x2_10.txt,6016
+50,100,1.0E-5,3,inputs/input_1000000x2_50.txt,2216
+50,100,1.0E-5,3,inputs/input_10000000x2_50.txt,3994
+10,100,1.0E-5,3,inputs/input_50000000x2_10.txt,6080
