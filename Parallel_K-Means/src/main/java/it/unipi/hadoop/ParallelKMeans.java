@@ -41,11 +41,11 @@ public class ParallelKMeans
         public void setup(Mapper.Context context) throws IOException, InterruptedException
         {
             String centroids_str = context.getConfiguration().get("parallel.kmeans.centroids",null);
-            centroids_str = centroids_str.substring(1, centroids_str.length() - 2);     //rimuovo la prima e l'ultima quadra
-            String[] single_centroid_str = centroids_str.split("], ");           // ogni centroide è rappresentato da un array
+            centroids_str = centroids_str.substring(1, centroids_str.length() - 2);     // Remove the first and last square bracket
+            String[] single_centroid_str = centroids_str.split("], ");           // each centroid is represented by an array
 
             for (String s:single_centroid_str) {
-                s = s.substring(1);         //tolgo la prima quadra
+                s = s.substring(1);         //Remove the first square bracket
                 centroids.add(new CentroidWritable(s));
             }
 

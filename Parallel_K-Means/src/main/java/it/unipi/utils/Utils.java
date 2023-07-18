@@ -11,7 +11,20 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+
+ The Utils class provides utility methods used in the K-means algorithm.
+ */
+
 public class Utils {
+    /**
+     * Calculates the sum of two lists of values element-wise.
+     * If the first list is empty, the second list is returned as is.
+     *
+     * @param sum    The first list of values.
+     * @param values The second list of values.
+     * @return The sum of the two lists of values.
+     */
     public static List<Double> sum(List<Double> sum, List<Double> values) {
         if (sum.isEmpty()) {
             return values;
@@ -26,6 +39,16 @@ public class Utils {
         }
     }
 
+
+    /**
+     * Checks the convergence of the K-means algorithm by comparing the distances between the old and new centroids.
+     * If the sum of distances is less than or equal to the tolerance, it indicates convergence.
+     *
+     * @param old_centroids The old centroids.
+     * @param new_centroids The new centroids.
+     * @param tolerance     The tolerance threshold.
+     * @return True if the centroids have converged, false otherwise.
+     */
     public static boolean checkConvergence(List<CentroidWritable> old_centroids, List<CentroidWritable> new_centroids, double tolerance){
         double distance_sum = 0.0d;
         for(int i =0; i< new_centroids.size(); i++){
@@ -38,12 +61,20 @@ public class Utils {
     }
 
 
-    /* abbiamo preso i primi k perchè:
-        - farlo randomico, sarebbe stato pesante nel momento in cui il file occupa più di un blocco
-        - computazione più veloce (leggere le prime righe è più veloce di dover generare un numero casuale e poi leggere le righe)
-        - prendere valori randomici al di fuori dal dataset sarebbe stato scorretto in quanto potevano essere generate coordinate
-            fuori distribuzione (outliers)
-      */
+    /**
+     * Generates a list of random centroids from the beginning of the input file.
+     * The first k lines of the file are read to obtain the initial centroids.
+     *
+     * @param k        The number of centroids.
+     * @param filePath The path to the input file.
+     * @return A list of random centroids.
+     */
+    /* We took the first k centroids because:
+        - Random selection would have been costly when the file occupies more than one block.
+        - It is faster to read the first lines than to generate a random number and then read the lines.
+        - Choosing random values outside the dataset would have been incorrect as they could have generated coordinates
+          outside the distribution (outliers).
+    */
     public static List<CentroidWritable> randomCentroids(int k, String filePath){
         List<CentroidWritable> centroids = new ArrayList<>();
 
@@ -60,6 +91,15 @@ public class Utils {
         return centroids;
     }
 
+
+    /**
+     * Reads the final centroids from the output files of the MapReduce job.
+     *
+     * @param config     The Hadoop configuration.
+     * @param inputPath  The path to the input directory.
+     * @return A list of final centroids.
+     * @throws IOException If an I/O error occurs.
+     */
     public static List<CentroidWritable> readCentroids(Configuration config, String inputPath) throws IOException {
         TreeMap<Integer, CentroidWritable> centroids = new TreeMap<>();
 
@@ -100,7 +140,20 @@ public class Utils {
     }
 
 
-
+    /**
+     * Saves the information about the K-means algorithm execution to a text file.
+     *
+     * @param k           The number of clusters.
+     * @param iter        The number of iterations.
+     * @param tolerance   The tolerance threshold.
+     * @param numReducers The number of reducers.
+     * @param inputPath   The input path.
+     * @param centroids   The final centroids.
+     * @param startTime   The start time of the execution.
+     * @param endTime     The end time of the execution.
+     * @param outputPath  The output path.
+     * @param flag        A flag indicating if it's the results from a combiner-based implementation (if false, it is).
+     */
     public static void saveInfo(int k, int iter, double tolerance, int numReducers, String inputPath, List<CentroidWritable> centroids, long startTime, long endTime, String outputPath, boolean flag) {
         Configuration conf = new Configuration();
         try {
