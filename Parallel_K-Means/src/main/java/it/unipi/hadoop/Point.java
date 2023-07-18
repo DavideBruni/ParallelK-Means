@@ -14,6 +14,12 @@ public class Point implements Writable{
 
     public Point(){}
 
+    /**
+     * Constructor for the Point class.
+     * Parses a string representation of a point and initializes the values list.
+     *
+     * @param str The string representation of the point.
+     */
     public Point(String str){
         String[] values_str = str.split(",");       // array of doubles with a string format, with comma as separator
         for (String value_str: values_str) {            // arraylist population
@@ -21,10 +27,22 @@ public class Point implements Writable{
         }
     }
 
+
+    /**
+     * Retrieves the list of values representing the coordinates of the point.
+     *
+     * @return The list of values.
+     */
     public List<Double> getValues() {
         return values;
     }
 
+
+    /**
+     * Sets the list of values representing the coordinates of the point.
+     *
+     * @param values The list of values to set.
+     */
     public void setValues(List<Double> values){
         this.values = values;
     }

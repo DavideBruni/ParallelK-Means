@@ -15,10 +15,20 @@ public class PartialClusterInfo implements Writable{
     private List<Double> partial_sum = new ArrayList<>();
     private int num_points = 0;
 
+    /**
+     * Retrieves the partial sum of values for the cluster.
+     *
+     * @return The list of partial sum values.
+     */
     public List<Double> getPartial_sum() {
         return partial_sum;
     }
 
+    /**
+     * Retrieves the number of points assigned to the cluster.
+     *
+     * @return The number of points.
+     */
     public int getNum_points() {
         return num_points;
     }
@@ -47,11 +57,21 @@ public class PartialClusterInfo implements Writable{
         num_points = dataInput.readInt();       // Read the value of num_points
     }
 
+    /**
+     * Adds a point to the partial cluster information by updating the partial sum and incrementing the number of points.
+     *
+     * @param point The point to add.
+     */
     public void add_point(Point point) {
         partial_sum = Utils.sum(partial_sum,point.getValues());
         num_points++;
     }
 
+    /**
+     * Combines the partial cluster information from another PartialClusterInfo object by updating the partial sum and incrementing the number of points.
+     *
+     * @param pi The PartialClusterInfo object to combine.
+     */
     public void add_points(PartialClusterInfo pi) {
         partial_sum = Utils.sum(partial_sum,pi.getPartial_sum());
         num_points += pi.getNum_points();

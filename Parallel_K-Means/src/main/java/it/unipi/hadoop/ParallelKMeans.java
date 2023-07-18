@@ -22,13 +22,24 @@ public class ParallelKMeans
 {
     public static class ParallelKMeansMapper extends Mapper<LongWritable, Text, IntWritable, PartialClusterInfo>
     {
+        /**
+         * Mapper class for the Parallel K-means algorithm.
+         * It assigns each input point to the nearest centroid and emits the cluster index and partial cluster information.
+         * It's implemented with an In-Mapper combiner
+         */
 
         private List<CentroidWritable> centroids = new ArrayList();
         private Map<Integer,List<Point>> points_to_cluster = new HashMap<>();
 
+        /**
+         * Initializes the mapper by retrieving the centroids from the configuration.
+         *
+         * @param context               The context object of the mapper.
+         * @throws IOException          If an I/O error occurs.
+         * @throws InterruptedException If the thread is interrupted.
+         */
         public void setup(Mapper.Context context) throws IOException, InterruptedException
         {
-            // inizializzazione array di centroidi
             String centroids_str = context.getConfiguration().get("parallel.kmeans.centroids",null);
             centroids_str = centroids_str.substring(1, centroids_str.length() - 2);     //rimuovo la prima e l'ultima quadra
             String[] single_centroid_str = centroids_str.split("], ");           // ogni centroide è rappresentato da un array
@@ -39,6 +50,16 @@ public class ParallelKMeans
             }
 
         }
+
+        /**
+         * Maps each input point to the nearest centroid.
+         *
+         * @param key                   The input key (ignored).
+         * @param value                 The input value representing a point as a Text.
+         * @param context               The context object of the mapper.
+         * @throws IOException          If an I/O error occurs.
+         * @throws InterruptedException If the thread is interrupted.
+         */
 
         @Override
         public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException
@@ -61,6 +82,14 @@ public class ParallelKMeans
 
         }
 
+        /**
+         * Emits the partial cluster information for each cluster.
+         *
+         * @param context               The context object of the mapper.
+         * @throws IOException          If an I/O error occurs.
+         * @throws InterruptedException If the thread is interrupted.
+         */
+
         @Override
         protected void cleanup(Mapper<LongWritable, Text, IntWritable, PartialClusterInfo>.Context context) throws IOException, InterruptedException {
             for(Integer index : points_to_cluster.keySet()){
@@ -74,9 +103,22 @@ public class ParallelKMeans
         }
     }
 
+    /**
+     * Reducer class for the Parallel K-means algorithm.
+     * It combines the partial cluster information for each cluster and emits the final centroid for the cluster.
+     */
+
     public static class ParallelKMeansReducer extends Reducer<IntWritable, PartialClusterInfo, IntWritable, CentroidWritable>
     {
-
+        /**
+         * Combines the partial cluster information for each cluster and emits the final centroid for the cluster.
+         *
+         * @param key                   The cluster index.
+         * @param values                The partial cluster information for the cluster.
+         * @param context               The context object of the reducer.
+         * @throws IOException          If an I/O error occurs.
+         * @throws InterruptedException If the thread is interrupted.
+         */
         public void reduce(IntWritable key, Iterable<PartialClusterInfo> values, Context context) throws IOException, InterruptedException
         {
             PartialClusterInfo partialClusterInfo = new PartialClusterInfo();
@@ -88,6 +130,13 @@ public class ParallelKMeans
 
     }
 
+
+    /**
+     * The main method of the Parallel K-means algorithm.
+     *
+     * @param args The command-line arguments: <k number of clusters> <tolerance> <max_iter> <r reducer number> <input> <output>
+     * @throws Exception If an error occurs during the execution.
+     */
     public static void main(String[] args) throws Exception
     {
         Configuration conf = new Configuration();
